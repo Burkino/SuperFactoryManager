@@ -3,10 +3,7 @@ package ca.teamdman.sfm.common.registry;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.compat.SFMCompat;
 import ca.teamdman.sfm.common.compat.SFMMekanismCompat;
-import ca.teamdman.sfm.common.resourcetype.FluidResourceType;
-import ca.teamdman.sfm.common.resourcetype.ForgeEnergyResourceType;
-import ca.teamdman.sfm.common.resourcetype.ItemResourceType;
-import ca.teamdman.sfm.common.resourcetype.ResourceType;
+import ca.teamdman.sfm.common.resourcetype.*;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
@@ -23,7 +20,6 @@ import net.minecraftforge.registries.RegistryBuilder;
 import net.minecraftforge.registries.RegistryObject;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Objects;
 import java.util.function.Supplier;
 
 public class SFMResourceTypes {
@@ -61,6 +57,10 @@ public class SFMResourceTypes {
     static {
         if (SFMCompat.isMekanismLoaded()) {
             SFMMekanismCompat.register(TYPES);
+        }
+
+        if (SFMCompat.isBotaniaLoaded()) {
+            TYPES.register("mana", ManaResourceType::new);
         }
     }
 
