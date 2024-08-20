@@ -264,6 +264,22 @@ repositories {
         url 'https://maven.covers1624.net/'
         // https://nexus.covers1624.net/#browse/browse:cofh-releases
     }
+
+    maven {
+        name = "C4"
+        url = "https://maven.theillusivec4.top/"
+        content {
+            includeGroup 'top.theillusivec4'
+        }
+    }
+
+    maven {
+        name = 'BlameJared'
+        url = 'https://maven.blamejared.com'
+        content {
+            includeGroup 'vazkii.botania'
+        }
+    }
 }
 
 dependencies {
@@ -372,7 +388,10 @@ dependencies {
     gametestImplementation fg.deobf("curse.maven:sophisticated-storage-619320:4503929")
     runtimeOnly fg.deobf("curse.maven:sophisticated-storage-619320:4503929")
 
-
+    // Botania
+    compileOnly fg.deobf("vazkii.botania:Botania:1.19.2-440.2-FORGE")
+    runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.19.2-5.1.1.0")
+    runtimeOnly fg.deobf("vazkii.botania:Botania:1.19.2-440.2-FORGE")
 }
 
 // This block of code expands all declared replace properties in the specified resource tar+gets.
