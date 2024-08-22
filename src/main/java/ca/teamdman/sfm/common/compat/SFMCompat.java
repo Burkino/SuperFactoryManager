@@ -1,9 +1,6 @@
 package ca.teamdman.sfm.common.compat;
 
-import ca.teamdman.sfm.common.resourcetype.GasResourceType;
-import ca.teamdman.sfm.common.resourcetype.InfuseResourceType;
-import ca.teamdman.sfm.common.resourcetype.PigmentResourceType;
-import ca.teamdman.sfm.common.resourcetype.SlurryResourceType;
+import ca.teamdman.sfm.common.resourcetype.*;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.fml.ModList;
@@ -15,23 +12,30 @@ public class SFMCompat {
         return ModList.get().getModContainerById("mekanism").isPresent();
     }
 
+    public static boolean isArsLoaded() {
+        return ModList.get().getModContainerById("ars_nouveau").isPresent();
+    }
+
     public static List<Capability<?>> getCapabilities() {
+        List<Capability<?>> capabilities = List.of(
+                ForgeCapabilities.ITEM_HANDLER,
+                ForgeCapabilities.FLUID_HANDLER,
+                ForgeCapabilities.ENERGY
+        );
+
         if (isMekanismLoaded()) {
-            return List.of(
-                    ForgeCapabilities.ITEM_HANDLER,
-                    ForgeCapabilities.FLUID_HANDLER,
-                    ForgeCapabilities.ENERGY,
+            capabilities.addAll(List.of(
                     GasResourceType.CAP,
                     InfuseResourceType.CAP,
                     PigmentResourceType.CAP,
                     SlurryResourceType.CAP
-            );
-        } else {
-            return List.of(
-                    ForgeCapabilities.ITEM_HANDLER,
-                    ForgeCapabilities.FLUID_HANDLER,
-                    ForgeCapabilities.ENERGY
-            );
+            ));
         }
+
+        if (isArsLoaded()) {
+            capabilities.add(SourceResourceType.CAP);
+        }
+
+        return capabilities;
     }
 }
