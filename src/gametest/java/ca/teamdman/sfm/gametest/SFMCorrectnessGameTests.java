@@ -16,6 +16,7 @@ import ca.teamdman.sfm.common.program.linting.GatherWarningsProgramBehaviour;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.util.SFMDirections;
+import ca.teamdman.sfml.ast.SFMProgram;
 import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -2456,7 +2457,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                        END
                                    """.stripTrailing().stripIndent());
         assertManagerRunning(manager);
-        var program = manager.getProgram();
+        var program = (SFMProgram) manager.getProgram();
 
         // ensure no warnings
         var warnings = DiskItem.getWarnings(Objects.requireNonNull(manager.getDisk()));
@@ -2507,7 +2508,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                        END
                                    """.stripTrailing().stripIndent());
         assertManagerRunning(manager);
-        var program = manager.getProgram();
+        var program = (SFMProgram) manager.getProgram();
 
         // ensure no warnings
         var warnings = DiskItem.getWarnings(Objects.requireNonNull(manager.getDisk()));
@@ -2565,7 +2566,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                        END
                                    """.stripTrailing().stripIndent());
         assertManagerRunning(manager);
-        var program = manager.getProgram();
+        var program = (SFMProgram) manager.getProgram();
 
         // ensure no warnings
         var warnings = DiskItem.getWarnings(Objects.requireNonNull(manager.getDisk()));

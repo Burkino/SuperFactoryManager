@@ -10,6 +10,7 @@ import ca.teamdman.sfm.common.program.linting.ProgramLinter;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.util.NotStored;
 import ca.teamdman.sfm.common.util.Stored;
+import ca.teamdman.sfml.ast.SFMProgram;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -75,6 +76,7 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
     }
 
     @Override
+    @Nullable
     public BlockEntity newBlockEntity(
             @Stored BlockPos pos,
             BlockState state
@@ -99,10 +101,10 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
             var disk = manager.getDisk();
             if (disk != null) {
                 var program = manager.getProgram();
-                if (program != null) {
+                if (program instanceof SFMProgram sfmProgram) {
                     DiskItem.setWarnings(
                             disk,
-                            ProgramLinter.gatherWarnings(program, LabelPositionHolder.from(disk), manager)
+                            ProgramLinter.gatherWarnings(sfmProgram, LabelPositionHolder.from(disk), manager)
                     );
                 }
             }

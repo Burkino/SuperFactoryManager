@@ -1,7 +1,7 @@
 package ca.teamdman.sfm.client;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.item.DiskItem;
+import ca.teamdman.sfm.common.item.AbstractDiskItem;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.Minecraft;
@@ -45,7 +45,7 @@ public class ClientDiagnosticInfo {
                         .append('\n');
             });
 
-            var errors = DiskItem.getErrors(diskStack);
+            var errors = AbstractDiskItem.getErrors(diskStack);
             if (!errors.isEmpty()) {
                 content.append("\n-- Errors\n");
                 for (var error : errors) {
@@ -53,7 +53,7 @@ public class ClientDiagnosticInfo {
                 }
             }
 
-            var warnings = DiskItem.getWarnings(diskStack);
+            var warnings = AbstractDiskItem.getWarnings(diskStack);
             if (!warnings.isEmpty()) {
                 content.append("\n-- Warnings\n");
                 for (var warning : warnings) {

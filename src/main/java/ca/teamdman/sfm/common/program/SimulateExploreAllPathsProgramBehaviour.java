@@ -125,7 +125,7 @@ public class SimulateExploreAllPathsProgramBehaviour implements ProgramBehaviour
 
     public void onProgramFinished(
             ProgramContext context,
-            Program program
+            SFMProgram program
     ) {
 
     }

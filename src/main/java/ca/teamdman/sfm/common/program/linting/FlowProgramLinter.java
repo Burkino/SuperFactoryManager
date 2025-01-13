@@ -4,7 +4,7 @@ import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfml.ast.IOStatement;
-import ca.teamdman.sfml.ast.Program;
+import ca.teamdman.sfml.ast.SFMProgram;
 import ca.teamdman.sfml.ast.ResourceQuantity;
 import ca.teamdman.sfml.ast.RoundRobin;
 import net.minecraft.network.chat.contents.TranslatableContents;
@@ -21,7 +21,7 @@ public class FlowProgramLinter implements IProgramLinter {
 
     @Override
     public ArrayList<TranslatableContents> gatherWarnings(
-            Program program,
+            SFMProgram program,
             LabelPositionHolder labelPositionHolder,
             @Nullable ManagerBlockEntity managerBlockEntity
     ) {
@@ -46,7 +46,7 @@ public class FlowProgramLinter implements IProgramLinter {
     public void fixWarnings(
             ManagerBlockEntity managerBlockEntity,
             ItemStack diskStack,
-            Program program
+            SFMProgram program
     ) {
         // Typically, these warnings can’t be “auto-fixed.”
     }
@@ -56,7 +56,7 @@ public class FlowProgramLinter implements IProgramLinter {
     // ------------------------------------------
 
     private void addWarningsForUsingIOWithoutCorrespondingOppositeIO(
-            Program program,
+            SFMProgram program,
             LabelPositionHolder labelPositionHolder,
             ArrayList<TranslatableContents> warnings
     ) {

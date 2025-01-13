@@ -1,68 +1,38 @@
 package ca.teamdman.sfm.common.item;
 
 import ca.teamdman.sfm.client.ClientKeyHelpers;
-import ca.teamdman.sfm.client.ClientScreenHelpers;
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfm.client.registry.SFMKeyMappings;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.localization.LocalizationKeys;
-import ca.teamdman.sfm.common.net.ServerboundDiskItemSetProgramPacket;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.program.linting.ProgramLinter;
-import ca.teamdman.sfm.common.registry.SFMItems;
-import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.SFMItemUtils;
-import ca.teamdman.sfm.common.util.SFMTranslationUtils;
-import ca.teamdman.sfml.ast.Program;
+import ca.teamdman.sfml.ast.SFMProgram;
 import net.minecraft.ChatFormatting;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.TranslatableContents;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.loading.FMLEnvironment;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
-public class DiskItem extends Item {
-    public DiskItem() {
-        super(new Item.Properties().tab(SFMItems.TAB));
-    }
-
-    public static String getProgram(ItemStack stack) {
-        return stack
-                .getOrCreateTag()
-                .getString("sfm:program");
-    }
-
-    public static void setProgram(ItemStack stack, String program) {
-        stack
-                .getOrCreateTag()
-                .putString("sfm:program", program.replaceAll("\r", ""));
-
-    }
-
-    public static @Nullable Program compileAndUpdateErrorsAndWarnings(ItemStack stack, @Nullable ManagerBlockEntity manager) {
+public class DiskItem extends AbstractDiskItem {
+    public static @Nullable SFMProgram compileAndUpdateErrorsAndWarnings(ItemStack stack, @Nullable ManagerBlockEntity manager) {
         if (manager != null) {
             manager.logger.info(x -> x.accept(LocalizationKeys.PROGRAM_COMPILE_FROM_DISK_BEGIN.get()));
         }
-        AtomicReference<Program> rtn = new AtomicReference<>(null);
-        Program.compile(
+        AtomicReference<SFMProgram> rtn = new AtomicReference<>(null);
+
+        SFMProgram.compile(
                 getProgram(stack),
                 successProgram -> {
                     ArrayList<TranslatableContents> warnings = ProgramLinter.gatherWarnings(successProgram, LabelPositionHolder.from(stack), manager);
@@ -100,80 +70,6 @@ public class DiskItem extends Item {
                 }
         );
         return rtn.get();
-    }
-
-    public static List<TranslatableContents> getErrors(ItemStack stack) {
-        return stack
-                .getOrCreateTag()
-                .getList("sfm:errors", Tag.TAG_COMPOUND)
-                .stream()
-                .map(CompoundTag.class::cast)
-                .map(SFMTranslationUtils::deserializeTranslation)
-                .toList();
-    }
-
-    public static void setErrors(ItemStack stack, List<TranslatableContents> errors) {
-        stack
-                .getOrCreateTag()
-                .put(
-                        "sfm:errors",
-                        errors
-                                .stream()
-                                .map(SFMTranslationUtils::serializeTranslation)
-                                .collect(ListTag::new, ListTag::add, ListTag::addAll)
-                );
-    }
-
-    public static List<TranslatableContents> getWarnings(ItemStack stack) {
-        return stack
-                .getOrCreateTag()
-                .getList("sfm:warnings", Tag.TAG_COMPOUND)
-                .stream()
-                .map(CompoundTag.class::cast)
-                .map(SFMTranslationUtils::deserializeTranslation)
-                .collect(
-                        Collectors.toList());
-    }
-
-    public static void setWarnings(ItemStack stack, List<TranslatableContents> warnings) {
-        stack
-                .getOrCreateTag()
-                .put(
-                        "sfm:warnings",
-                        warnings
-                                .stream()
-                                .map(SFMTranslationUtils::serializeTranslation)
-                                .collect(ListTag::new, ListTag::add, ListTag::addAll)
-                );
-    }
-
-    public static String getProgramName(ItemStack stack) {
-        return stack
-                .getOrCreateTag()
-                .getString("sfm:name");
-    }
-
-    public static void setProgramName(ItemStack stack, String name) {
-        if (stack.getItem() instanceof DiskItem) {
-            stack
-                    .getOrCreateTag()
-                    .putString("sfm:name", name);
-        }
-    }
-
-    @Override
-    public @NotNull InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
-        var stack = pPlayer.getItemInHand(pUsedHand);
-        if (pLevel.isClientSide) {
-            ClientScreenHelpers.showProgramEditScreen(
-                    getProgram(stack),
-                    programString -> SFMPackets.sendToServer(new ServerboundDiskItemSetProgramPacket(
-                                programString,
-                                pUsedHand
-                        ))
-            );
-        }
-        return InteractionResultHolder.sidedSuccess(stack, pLevel.isClientSide());
     }
 
     @Override
@@ -217,5 +113,4 @@ public class DiskItem extends Item {
             lines.add(LocalizationKeys.DISK_EDIT_IN_HAND_TOOLTIP.getComponent().withStyle(ChatFormatting.GRAY));
         }
     }
-
 }

@@ -5,7 +5,7 @@ import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.logging.TranslatableLogger;
 import ca.teamdman.sfml.ast.InputStatement;
-import ca.teamdman.sfml.ast.Program;
+import ca.teamdman.sfml.ast.SFMProgram;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class ProgramContext {
-    private final Program PROGRAM;
+    private final SFMProgram PROGRAM;
     private final ManagerBlockEntity MANAGER;
     private final CableNetwork NETWORK;
     private final List<InputStatement> INPUTS = new ArrayList<>();
@@ -33,7 +33,7 @@ public class ProgramContext {
     }
 
     private ProgramContext(
-            Program program,
+            SFMProgram program,
             ManagerBlockEntity manager,
             CableNetwork network,
             Level level,
@@ -52,7 +52,7 @@ public class ProgramContext {
         this.LOGGER = logger;
     }
 
-    public static ProgramContext createSimulationContext(Program program, LabelPositionHolder labelPositionHolder, int redstonePulses, SimulateExploreAllPathsProgramBehaviour behaviour) {
+    public static ProgramContext createSimulationContext(SFMProgram program, LabelPositionHolder labelPositionHolder, int redstonePulses, SimulateExploreAllPathsProgramBehaviour behaviour) {
         //noinspection DataFlowIssue // simulation mode must be able to run without world access
         return new ProgramContext(
                 program,
@@ -67,7 +67,7 @@ public class ProgramContext {
     }
 
     public ProgramContext(
-            Program program,
+            SFMProgram program,
             ManagerBlockEntity manager,
             ProgramBehaviour executionBehaviour
     ) {
@@ -106,7 +106,7 @@ public class ProgramContext {
         return BEHAVIOUR;
     }
 
-    public Program getProgram() {
+    public SFMProgram getProgram() {
         return PROGRAM;
     }
 

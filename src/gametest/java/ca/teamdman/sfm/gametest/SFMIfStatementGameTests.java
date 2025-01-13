@@ -11,7 +11,7 @@ import ca.teamdman.sfm.common.program.linting.GatherWarningsProgramBehaviour;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfml.ast.OutputStatement;
-import ca.teamdman.sfml.ast.Program;
+import ca.teamdman.sfml.ast.SFMProgram;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -559,7 +559,7 @@ public class SFMIfStatementGameTests extends SFMGameTestBase {
                                        END
                                    """.stripTrailing().stripIndent());
         assertManagerRunning(manager);
-        var program = manager.getProgram();
+        var program = (SFMProgram) manager.getProgram();
 
         // ensure no warnings
         var warnings = DiskItem.getWarnings(manager.getDisk());
@@ -665,7 +665,7 @@ public class SFMIfStatementGameTests extends SFMGameTestBase {
                                        END
                                    """.stripTrailing().stripIndent());
         assertManagerRunning(manager);
-        var program = manager.getProgram();
+        var program = (SFMProgram) manager.getProgram();
 
         // ensure no warnings
         var warnings = DiskItem.getWarnings(manager.getDisk());
@@ -734,7 +734,7 @@ public class SFMIfStatementGameTests extends SFMGameTestBase {
         assertManagerRunning(manager);
 
         // compile new program for inspection
-        Program program = compile(code);
+        SFMProgram program = compile(code);
 
 
         OutputStatement outputStatement = (OutputStatement) program

@@ -4,18 +4,18 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.config.SFMConfig;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.handler.OpenContainerTracker;
-import ca.teamdman.sfm.common.item.DiskItem;
+import ca.teamdman.sfm.common.item.AbstractDiskItem;
 import ca.teamdman.sfm.common.localization.LocalizationEntry;
 import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.logging.TranslatableLogger;
 import ca.teamdman.sfm.common.net.ClientboundManagerGuiUpdatePacket;
 import ca.teamdman.sfm.common.net.ClientboundManagerLogLevelUpdatedPacket;
 import ca.teamdman.sfm.common.net.ClientboundManagerLogsPacket;
+import ca.teamdman.sfm.common.program.IProgram;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.SFMContainerUtil;
-import ca.teamdman.sfml.ast.Program;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
@@ -41,7 +41,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public final TranslatableLogger logger;
     private final NonNullList<ItemStack> ITEMS = NonNullList.withSize(1, ItemStack.EMPTY);
     private final long[] tickTimeNanos = new long[TICK_TIME_HISTORY_SIZE];
-    private @Nullable Program program = null;
+    private @Nullable IProgram program = null;
     private int tick = 0;
     private int unprocessedRedstonePulses = 0; // used by redstone trigger
     private boolean shouldRebuildProgram = false;
@@ -141,14 +141,14 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         return tick;
     }
 
-    public @Nullable Program getProgram() {
+    public @Nullable IProgram getProgram() {
         return program;
     }
 
     public void setProgram(String program) {
         var disk = getDisk();
         if (disk != null) {
-            DiskItem.setProgram(disk, program);
+            AbstractDiskItem.setProgram(disk, program);
             rebuildProgramAndUpdateDisk();
             setChanged();
         }
@@ -179,7 +179,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
             return null;
         }
 
-        var program = DiskItem.getProgram(disk);
+        var program = AbstractDiskItem.getProgram(disk);
         return program.isBlank() ? null : program;
     }
 
@@ -195,7 +195,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
     public @Nullable ItemStack getDisk() {
         var item = getItem(0);
-        if (item.getItem() instanceof DiskItem) return item;
+        if (item.getItem() instanceof AbstractDiskItem) return item;
         return null;
     }
 
@@ -205,7 +205,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         if (disk == null) {
             this.program = null;
         } else {
-            this.program = DiskItem.compileAndUpdateErrorsAndWarnings(disk, this);
+            this.program = IProgram.compileAndUpdateErrorsAndWarnings(disk, this);
         }
         sendUpdatePacket();
     }
@@ -266,7 +266,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
             int slot,
             ItemStack stack
     ) {
-        return stack.getItem() instanceof DiskItem;
+        return stack.getItem() instanceof AbstractDiskItem;
     }
 
     @Override

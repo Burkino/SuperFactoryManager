@@ -3,6 +3,7 @@ package ca.teamdman.sfm.common.net;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.program.linting.ProgramLinter;
+import ca.teamdman.sfml.ast.SFMProgram;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 
@@ -46,11 +47,11 @@ public record ServerboundManagerFixPacket(
                         var disk = manager.getDisk();
                         if (disk != null) {
                             var program = manager.getProgram();
-                            if (program != null) {
+                            if (program instanceof SFMProgram sfmProgram) {
                                 ProgramLinter.fixWarnings(
                                         manager,
                                         disk,
-                                        program
+                                        sfmProgram
                                 );
                             }
                         }

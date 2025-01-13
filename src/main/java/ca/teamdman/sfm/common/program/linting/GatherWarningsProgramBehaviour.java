@@ -177,7 +177,7 @@ public class GatherWarningsProgramBehaviour extends SimulateExploreAllPathsProgr
     @Override
     public void onProgramFinished(
             ProgramContext context,
-            Program program) {
+            SFMProgram program) {
         super.onProgramFinished(context, program);
         // we need to calculate what warnings were present in ALL paths
 

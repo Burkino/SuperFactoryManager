@@ -5,7 +5,7 @@ import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.util.NotStored;
 import ca.teamdman.sfml.ast.Block;
-import ca.teamdman.sfml.ast.Program;
+import ca.teamdman.sfml.ast.SFMProgram;
 import ca.teamdman.sfml.ast.Trigger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestAssertException;
@@ -48,9 +48,9 @@ public abstract class SFMGameTestBase {
         }
     }
 
-    protected static Program compile(String code) {
-        AtomicReference<Program> rtn = new AtomicReference<>();
-        Program.compile(
+    protected static SFMProgram compile(String code) {
+        AtomicReference<SFMProgram> rtn = new AtomicReference<>();
+        SFMProgram.compile(
                 code,
                 rtn::set,
                 errors -> {
@@ -92,7 +92,7 @@ public abstract class SFMGameTestBase {
         var hasExecuted = new AtomicBoolean(false);
         var startTime = new AtomicLong();
         var endTime = new AtomicLong();
-        List<Trigger> triggers = Objects.requireNonNull(manager.getProgram()).triggers();
+        List<Trigger> triggers = Objects.requireNonNull((SFMProgram) manager.getProgram()).triggers();
         var oldFirstTrigger = triggers.get(0);
         long timeoutTicks = 200;
 

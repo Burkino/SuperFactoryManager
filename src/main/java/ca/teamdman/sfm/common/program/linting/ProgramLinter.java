@@ -40,7 +40,7 @@ import static ca.teamdman.sfml.ast.RoundRobin.Behaviour.BY_LABEL;
 public class ProgramLinter {
     @SuppressWarnings("ConstantValue")
     public static ArrayList<TranslatableContents> gatherWarnings(
-            Program program,
+            SFMProgram program,
             LabelPositionHolder labelPositionHolder,
             @Nullable ManagerBlockEntity manager
     ) {
@@ -86,7 +86,7 @@ public class ProgramLinter {
     public static void fixWarnings(
             ManagerBlockEntity manager,
             ItemStack disk,
-            Program program
+            SFMProgram program
     ) {
         fixWarningsByRemovingBadLabelsFromDisk(manager, disk, program);
         LabelPositionHolder labelPositionHolder = LabelPositionHolder.from(disk);
@@ -104,7 +104,7 @@ public class ProgramLinter {
     private static void fixWarningsByRemovingBadLabelsFromDisk(
             ManagerBlockEntity manager,
             ItemStack disk,
-            Program program
+            SFMProgram program
     ) {
         var labels = LabelPositionHolder.from(disk);
         // remove labels not defined in code
@@ -263,7 +263,7 @@ public class ProgramLinter {
     }
 
     private static void addWarningsForUsingIOWithoutCorrespondingOppositeIO(
-            Program program,
+            SFMProgram program,
             LabelPositionHolder labelPositionHolder,
             ArrayList<TranslatableContents> warnings
     ) {
@@ -307,7 +307,7 @@ public class ProgramLinter {
     }
 
     private static void addWarningsForResourcesReferencedButNotFoundInRegistry(
-            Program program,
+            SFMProgram program,
             ArrayList<TranslatableContents> warnings
     ) {
         for (var resource : program.referencedResources()) {
@@ -369,7 +369,7 @@ public class ProgramLinter {
     }
 
     private static void addWarningsForLabelsInHolderButNotInProgram(
-            Program program,
+            SFMProgram program,
             LabelPositionHolder labels,
             ArrayList<TranslatableContents> warnings
     ) {
@@ -381,7 +381,7 @@ public class ProgramLinter {
     }
 
     private static void addWarningsForLabelsInProgramButNotInHolder(
-            Program program,
+            SFMProgram program,
             LabelPositionHolder labels,
             ArrayList<TranslatableContents> warnings
     ) {

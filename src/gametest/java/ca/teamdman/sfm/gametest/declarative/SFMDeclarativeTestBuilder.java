@@ -11,7 +11,7 @@ import ca.teamdman.sfm.gametest.SFMGameTestBase;
 import ca.teamdman.sfml.ast.ASTBuilder;
 import ca.teamdman.sfml.ast.BoolExpr;
 import ca.teamdman.sfml.ast.IfStatement;
-import ca.teamdman.sfml.ast.Program;
+import ca.teamdman.sfml.ast.SFMProgram;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -116,7 +116,7 @@ public class SFMDeclarativeTestBuilder extends SFMGameTestBase {
         if (conditions.isEmpty()) return;
         List<BoolExpr> expressions = conditions.stream().map(this::getCondition).toList();
         ProgramContext programContext = new ProgramContext(
-                new Program(new ASTBuilder(), "temp lol", List.of(), Set.of(), Set.of(), -1),
+                new SFMProgram(new ASTBuilder(), "temp lol", List.of(), Set.of(), Set.of(), -1),
                 manager,
                 DefaultProgramBehaviour::new
         );
@@ -135,7 +135,7 @@ public class SFMDeclarativeTestBuilder extends SFMGameTestBase {
         // Or something like: “b BOTTOM SIDE HAS EQ 0 fe::”
         Mutable<BoolExpr> rtn = new MutableObject<>();
         String program = "EVERY 20 TICKS DO IF " + line + " THEN END END";
-        Program.compile(
+        SFMProgram.compile(
                 program,
                 success -> {
                     BoolExpr condition = (

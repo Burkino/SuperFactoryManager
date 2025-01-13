@@ -5,13 +5,14 @@ import ca.teamdman.sfm.client.ClientDiagnosticInfo;
 import ca.teamdman.sfm.client.ClientScreenHelpers;
 import ca.teamdman.sfm.common.command.ConfigCommandBehaviourInput;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
+import ca.teamdman.sfm.common.item.AbstractDiskItem;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.localization.LocalizationEntry;
 import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.net.*;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMPackets;
-import ca.teamdman.sfml.ast.Program;
+import ca.teamdman.sfml.ast.SFMProgram;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Matrix4f;
@@ -325,7 +326,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     private void sendProgram(String program) {
-        program = SFMPacketDaddy.truncate(program, Program.MAX_PROGRAM_LENGTH);
+        program = SFMPacketDaddy.truncate(program, SFMProgram.MAX_PROGRAM_LENGTH);
         SFMPackets.sendToServer(new ServerboundManagerProgramPacket(
                 menu.containerId,
                 menu.MANAGER_POSITION,
@@ -348,16 +349,16 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
 
     private boolean shouldShowDiagButton() {
         var disk = menu.getDisk();
-        if (!(disk.getItem() instanceof DiskItem)) return false;
-        var errors = DiskItem.getErrors(disk);
-        var warnings = DiskItem.getWarnings(disk);
+        if (!(disk.getItem() instanceof AbstractDiskItem)) return false;
+        var errors = AbstractDiskItem.getErrors(disk);
+        var warnings = AbstractDiskItem.getWarnings(disk);
         return !errors.isEmpty() || !warnings.isEmpty();
     }
 
     private void onSaveDiagClipboard() {
         try {
             var disk = menu.CONTAINER.getItem(0);
-            if (!(disk.getItem() instanceof DiskItem)) return;
+            if (!(disk.getItem() instanceof AbstractDiskItem)) return;
             String diagnosticInfo = ClientDiagnosticInfo.getDiagnosticInfo(menu.program, disk);
             Minecraft.getInstance().keyboardHandler.setClipboard(diagnosticInfo);
             status = MANAGER_GUI_STATUS_SAVED_CLIPBOARD.getComponent();

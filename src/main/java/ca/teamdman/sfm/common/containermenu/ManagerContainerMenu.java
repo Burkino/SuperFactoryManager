@@ -1,11 +1,11 @@
 package ca.teamdman.sfm.common.containermenu;
 
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
-import ca.teamdman.sfm.common.item.DiskItem;
+import ca.teamdman.sfm.common.item.AbstractDiskItem;
 import ca.teamdman.sfm.common.logging.TranslatableLogEvent;
 import ca.teamdman.sfm.common.net.ServerboundManagerSetLogLevelPacket;
 import ca.teamdman.sfm.common.registry.SFMMenus;
-import ca.teamdman.sfml.ast.Program;
+import ca.teamdman.sfml.ast.SFMProgram;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.Container;
@@ -60,7 +60,7 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
 
             @Override
             public boolean mayPlace(ItemStack stack) {
-                return stack.getItem() instanceof DiskItem;
+                return stack.getItem() instanceof AbstractDiskItem;
             }
         });
 
@@ -85,7 +85,7 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
                 inventory,
                 new SimpleContainer(1),
                 buf.readBlockPos(),
-                buf.readUtf(Program.MAX_PROGRAM_LENGTH),
+                buf.readUtf(SFMProgram.MAX_PROGRAM_LENGTH),
                 buf.readUtf(ServerboundManagerSetLogLevelPacket.MAX_LOG_LEVEL_NAME_LENGTH),
                 buf.readEnum(ManagerBlockEntity.State.class),
                 buf.readLongArray(null, ManagerBlockEntity.TICK_TIME_HISTORY_SIZE),
@@ -116,7 +116,7 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
             FriendlyByteBuf buf
     ) {
         buf.writeBlockPos(manager.getBlockPos());
-        buf.writeUtf(manager.getProgramStringOrEmptyIfNull(), Program.MAX_PROGRAM_LENGTH);
+        buf.writeUtf(manager.getProgramStringOrEmptyIfNull(), SFMProgram.MAX_PROGRAM_LENGTH);
         buf.writeUtf(
                 manager.logger.getLogLevel().name(),
                 ServerboundManagerSetLogLevelPacket.MAX_LOG_LEVEL_NAME_LENGTH

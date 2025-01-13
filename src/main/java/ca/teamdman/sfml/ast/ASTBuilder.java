@@ -112,10 +112,10 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     @Override
     public Label visitRawLabel(SFMLParser.RawLabelContext ctx) {
         var label = new Label(ctx.getText());
-        if (label.name().length() > Program.MAX_LABEL_LENGTH) {
+        if (label.name().length() > SFMProgram.MAX_LABEL_LENGTH) {
             throw new IllegalArgumentException(
                     "Label name cannot be longer than "
-                    + Program.MAX_LABEL_LENGTH
+                    + SFMProgram.MAX_LABEL_LENGTH
                     + " characters."
             );
         }
@@ -127,10 +127,10 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     @Override
     public Label visitStringLabel(SFMLParser.StringLabelContext ctx) {
         var label = new Label(visitString(ctx.string()).value());
-        if (label.name().length() > Program.MAX_LABEL_LENGTH) {
+        if (label.name().length() > SFMProgram.MAX_LABEL_LENGTH) {
             throw new IllegalArgumentException(
                     "Label name cannot be longer than "
-                    + Program.MAX_LABEL_LENGTH
+                    + SFMProgram.MAX_LABEL_LENGTH
                     + " characters."
             );
         }
@@ -140,7 +140,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public Program visitProgram(SFMLParser.ProgramContext ctx) {
+    public SFMProgram visitProgram(SFMLParser.ProgramContext ctx) {
         int configRevision = SFMConfig.SERVER.getRevision();
         if (SFMConfig.getOrDefault(SFMConfig.SERVER.disableProgramExecution)) {
             throw new AssertionError("Program execution is disabled via config");
@@ -156,7 +156,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                 .stream()
                 .map(Label::name)
                 .collect(Collectors.toSet());
-        Program program = new Program(this, name.value(), triggers, labels, USED_RESOURCES, configRevision);
+        SFMProgram program = new SFMProgram(this, name.value(), triggers, labels, USED_RESOURCES, configRevision);
         AST_NODE_CONTEXTS.add(new Pair<>(program, ctx));
         return program;
     }

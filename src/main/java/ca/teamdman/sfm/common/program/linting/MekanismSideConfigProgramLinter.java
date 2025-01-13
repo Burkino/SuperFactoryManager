@@ -32,7 +32,7 @@ public class MekanismSideConfigProgramLinter implements IProgramLinter {
 
     @Override
     public ArrayList<TranslatableContents> gatherWarnings(
-            Program program,
+            SFMProgram program,
             LabelPositionHolder labelPositionHolder,
             @Nullable ManagerBlockEntity managerBlockEntity
     ) {
@@ -65,7 +65,7 @@ public class MekanismSideConfigProgramLinter implements IProgramLinter {
     public void fixWarnings(
             ManagerBlockEntity managerBlockEntity,
             ItemStack diskStack,
-            Program program
+            SFMProgram program
     ) {
         if (!SFMModCompat.isMekanismLoaded()) return;
         if (managerBlockEntity == null || managerBlockEntity.getLevel() == null) {

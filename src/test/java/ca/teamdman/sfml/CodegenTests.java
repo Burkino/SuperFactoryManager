@@ -44,9 +44,9 @@ public class CodegenTests {
         var builder = new ASTBuilder();
         var errors = new ArrayList<String>();
         lexer.removeErrorListeners();
-        lexer.addErrorListener(new Program.ListErrorListener(errors));
+        lexer.addErrorListener(new SFMProgram.ListErrorListener(errors));
         parser.removeErrorListeners();
-        parser.addErrorListener(new Program.ListErrorListener(errors));
+        parser.addErrorListener(new SFMProgram.ListErrorListener(errors));
         var context = parser.program();
         if (errors.isEmpty()) { // don't build if syntax errors present
             try {
@@ -77,7 +77,7 @@ public class CodegenTests {
                 NumberRangeSet.MAX_RANGE,
                 RoundRobin.disabled()
         );
-        var program = new Program(
+        var program = new SFMProgram(
                 new ASTBuilder(),
                 "hello world",
                 List.of(new TimerTrigger(

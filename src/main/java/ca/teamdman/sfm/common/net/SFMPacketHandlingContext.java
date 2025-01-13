@@ -5,7 +5,7 @@ import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.Stored;
-import ca.teamdman.sfml.ast.Program;
+import ca.teamdman.sfml.ast.SFMProgram;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -132,7 +132,7 @@ public class SFMPacketHandlingContext {
                     "This inspection is only available when editing inside a manager."));
             return;
         }
-        Program.compile(
+        SFMProgram.compile(
                 programString,
                 successProgram -> callback.accept(successProgram, player, manager),
                 failure -> {
@@ -148,7 +148,7 @@ public class SFMPacketHandlingContext {
     @FunctionalInterface
     public interface ProgramConsumer {
         void accept(
-                Program program,
+                SFMProgram program,
                 ServerPlayer player,
                 ManagerBlockEntity managerBlockEntity
         );

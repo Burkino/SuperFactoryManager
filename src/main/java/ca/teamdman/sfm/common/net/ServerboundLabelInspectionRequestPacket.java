@@ -5,7 +5,7 @@ import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.registry.SFMPackets;
-import ca.teamdman.sfml.ast.Program;
+import ca.teamdman.sfml.ast.SFMProgram;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -25,13 +25,13 @@ public record ServerboundLabelInspectionRequestPacket(
                 ServerboundLabelInspectionRequestPacket msg,
                 FriendlyByteBuf friendlyByteBuf
         ) {
-            friendlyByteBuf.writeUtf(msg.label(), Program.MAX_LABEL_LENGTH);
+            friendlyByteBuf.writeUtf(msg.label(), SFMProgram.MAX_LABEL_LENGTH);
         }
 
         @Override
         public ServerboundLabelInspectionRequestPacket decode(FriendlyByteBuf friendlyByteBuf) {
             return new ServerboundLabelInspectionRequestPacket(
-                    friendlyByteBuf.readUtf(Program.MAX_LABEL_LENGTH)
+                    friendlyByteBuf.readUtf(SFMProgram.MAX_LABEL_LENGTH)
             );
         }
 

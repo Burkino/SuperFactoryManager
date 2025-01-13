@@ -2,7 +2,7 @@ package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
-import ca.teamdman.sfml.ast.Program;
+import ca.teamdman.sfml.ast.SFMProgram;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 
@@ -23,7 +23,7 @@ public record ServerboundManagerProgramPacket(
         ) {
             friendlyByteBuf.writeVarInt(msg.windowId());
             friendlyByteBuf.writeBlockPos(msg.pos());
-            friendlyByteBuf.writeUtf(msg.program(), Program.MAX_PROGRAM_LENGTH);
+            friendlyByteBuf.writeUtf(msg.program(), SFMProgram.MAX_PROGRAM_LENGTH);
         }
 
         @Override
@@ -31,7 +31,7 @@ public record ServerboundManagerProgramPacket(
             return new ServerboundManagerProgramPacket(
                     friendlyByteBuf.readVarInt(),
                     friendlyByteBuf.readBlockPos(),
-                    friendlyByteBuf.readUtf(Program.MAX_PROGRAM_LENGTH)
+                    friendlyByteBuf.readUtf(SFMProgram.MAX_PROGRAM_LENGTH)
             );
         }
 

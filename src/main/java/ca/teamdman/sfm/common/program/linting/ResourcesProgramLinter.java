@@ -2,7 +2,7 @@ package ca.teamdman.sfm.common.program.linting;
 
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
-import ca.teamdman.sfml.ast.Program;
+import ca.teamdman.sfml.ast.SFMProgram;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -17,7 +17,7 @@ public class ResourcesProgramLinter implements IProgramLinter {
 
     @Override
     public ArrayList<TranslatableContents> gatherWarnings(
-            Program program,
+            SFMProgram program,
             LabelPositionHolder labelPositionHolder,
             @Nullable ManagerBlockEntity managerBlockEntity
     ) {
@@ -47,7 +47,7 @@ public class ResourcesProgramLinter implements IProgramLinter {
     public void fixWarnings(
             ManagerBlockEntity managerBlockEntity,
             ItemStack diskStack,
-            Program program
+            SFMProgram program
     ) {
         // Resource references typically cannot be “auto-fixed,” so do nothing here.
     }

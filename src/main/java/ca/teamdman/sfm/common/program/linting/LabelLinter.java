@@ -5,7 +5,7 @@ import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMCapabilityProviderMappers;
-import ca.teamdman.sfml.ast.Program;
+import ca.teamdman.sfml.ast.SFMProgram;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -19,7 +19,7 @@ public class LabelLinter implements IProgramLinter {
 
     @Override
     public ArrayList<TranslatableContents> gatherWarnings(
-            Program program,
+            SFMProgram program,
             LabelPositionHolder labelPositionHolder,
             @Nullable ManagerBlockEntity managerBlockEntity
     ) {
@@ -50,7 +50,7 @@ public class LabelLinter implements IProgramLinter {
     public void fixWarnings(
             ManagerBlockEntity managerBlockEntity,
             ItemStack diskStack,
-            Program program
+            SFMProgram program
     ) {
         if (managerBlockEntity == null || managerBlockEntity.getLevel() == null) {
             return;
@@ -63,7 +63,7 @@ public class LabelLinter implements IProgramLinter {
     // ------------------------------------------
 
     private void addWarningsForLabelsInProgramButNotInHolder(
-            Program program,
+            SFMProgram program,
             LabelPositionHolder labels,
             ArrayList<TranslatableContents> warnings
     ) {
@@ -76,7 +76,7 @@ public class LabelLinter implements IProgramLinter {
     }
 
     private void addWarningsForLabelsInHolderButNotInProgram(
-            Program program,
+            SFMProgram program,
             LabelPositionHolder labels,
             ArrayList<TranslatableContents> warnings
     ) {
@@ -116,7 +116,7 @@ public class LabelLinter implements IProgramLinter {
     private void fixWarningsByRemovingBadLabelsFromDisk(
             ManagerBlockEntity manager,
             ItemStack disk,
-            Program program
+            SFMProgram program
     ) {
         var labels = LabelPositionHolder.from(disk);
         // remove labels not defined in code

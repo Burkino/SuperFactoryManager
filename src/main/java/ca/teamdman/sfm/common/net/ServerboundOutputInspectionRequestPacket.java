@@ -32,7 +32,7 @@ public record ServerboundOutputInspectionRequestPacket(
 
     public static String getOutputStatementInspectionResultsString(
             ManagerBlockEntity manager,
-            Program successProgram,
+            SFMProgram successProgram,
             OutputStatement outputStatement
     ) {
         StringBuilder payload = new StringBuilder();
@@ -274,14 +274,14 @@ public record ServerboundOutputInspectionRequestPacket(
                 ServerboundOutputInspectionRequestPacket msg,
                 FriendlyByteBuf friendlyByteBuf
         ) {
-            friendlyByteBuf.writeUtf(msg.programString, Program.MAX_PROGRAM_LENGTH);
+            friendlyByteBuf.writeUtf(msg.programString, SFMProgram.MAX_PROGRAM_LENGTH);
             friendlyByteBuf.writeInt(msg.outputNodeIndex());
         }
 
         @Override
         public ServerboundOutputInspectionRequestPacket decode(FriendlyByteBuf friendlyByteBuf) {
             return new ServerboundOutputInspectionRequestPacket(
-                    friendlyByteBuf.readUtf(Program.MAX_PROGRAM_LENGTH),
+                    friendlyByteBuf.readUtf(SFMProgram.MAX_PROGRAM_LENGTH),
                     friendlyByteBuf.readInt()
             );
         }

@@ -69,7 +69,7 @@ public class SFMPackets {
         registerPacket(new ServerboundBoolExprStatementInspectionRequestPacket.Daddy());
         registerPacket(new ServerboundServerConfigRequestPacket.Daddy());
         registerPacket(new ServerboundContainerExportsInspectionRequestPacket.Daddy());
-        registerPacket(new ServerboundDiskItemSetProgramPacket.Daddy());
+        registerPacket(new ServerboundAbstractDiskItemSetProgramPacket.Daddy());
         registerPacket(new ServerboundFacadePacket.Daddy());
         registerPacket(new ServerboundIfStatementInspectionRequestPacket.Daddy());
         registerPacket(new ServerboundInputInspectionRequestPacket.Daddy());

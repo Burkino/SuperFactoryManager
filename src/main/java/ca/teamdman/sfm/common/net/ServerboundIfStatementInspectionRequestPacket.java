@@ -4,7 +4,7 @@ import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.program.SimulateExploreAllPathsProgramBehaviour;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfml.ast.IfStatement;
-import ca.teamdman.sfml.ast.Program;
+import ca.teamdman.sfml.ast.SFMProgram;
 import net.minecraft.network.FriendlyByteBuf;
 
 public record ServerboundIfStatementInspectionRequestPacket(
@@ -21,14 +21,14 @@ public record ServerboundIfStatementInspectionRequestPacket(
                 ServerboundIfStatementInspectionRequestPacket msg,
                 FriendlyByteBuf friendlyByteBuf
         ) {
-            friendlyByteBuf.writeUtf(msg.programString, Program.MAX_PROGRAM_LENGTH);
+            friendlyByteBuf.writeUtf(msg.programString, SFMProgram.MAX_PROGRAM_LENGTH);
             friendlyByteBuf.writeInt(msg.inputNodeIndex());
         }
 
         @Override
         public ServerboundIfStatementInspectionRequestPacket decode(FriendlyByteBuf friendlyByteBuf) {
             return new ServerboundIfStatementInspectionRequestPacket(
-                    friendlyByteBuf.readUtf(Program.MAX_PROGRAM_LENGTH),
+                    friendlyByteBuf.readUtf(SFMProgram.MAX_PROGRAM_LENGTH),
                     friendlyByteBuf.readInt()
             );
         }

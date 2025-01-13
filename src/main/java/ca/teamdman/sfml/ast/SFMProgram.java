@@ -26,14 +26,14 @@ import java.util.function.Consumer;
 import static ca.teamdman.sfm.common.blockentity.ManagerBlockEntity.TICK_TIME_HISTORY_SIZE;
 import static ca.teamdman.sfm.common.net.ServerboundManagerSetLogLevelPacket.MAX_LOG_LEVEL_NAME_LENGTH;
 
-public record Program(
+public record SFMProgram(
         ASTBuilder builder,
         String name,
         List<Trigger> triggers,
         Set<String> referencedLabels,
         Set<ResourceIdentifier<?, ?, ?>> referencedResources,
         int configRevision
-) implements Statement {
+) implements Statement, IProgram {
     /** 
      * This comes from {@link java.io.DataOutputStream#writeUTF(String, DataOutput)}
      * and {@link NetworkHooks#openScreen(ServerPlayer, MenuProvider, Consumer)}
@@ -48,7 +48,7 @@ public record Program(
 
     public static void compile(
             String programString,
-            Consumer<Program> onSuccess,
+            Consumer<SFMProgram> onSuccess,
             Consumer<List<TranslatableContents>> onFailure
     ) {
         SFMLLexer lexer = new SFMLLexer(CharStreams.fromString(programString));
@@ -71,7 +71,7 @@ public record Program(
 
 
         // build AST
-        Program program = null;
+        SFMProgram program = null;
         if (errors.isEmpty()) {
             try {
                 program = builder.visitProgram(context);
@@ -319,6 +319,7 @@ public record Program(
             trace.accept(LocalizationKeys.LOG_PROGRAM_CONTEXT.get(context));
         };
     }
+
 
     public static class ListErrorListener extends BaseErrorListener {
         private final List<String> errors;

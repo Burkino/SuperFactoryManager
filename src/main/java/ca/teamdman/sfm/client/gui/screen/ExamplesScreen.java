@@ -3,7 +3,7 @@ package ca.teamdman.sfm.client.gui.screen;
 import ca.teamdman.sfm.common.config.SFMConfig;
 import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
-import ca.teamdman.sfml.ast.Program;
+import ca.teamdman.sfml.ast.SFMProgram;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
@@ -60,7 +60,7 @@ public class ExamplesScreen extends Screen {
                     program = program.replace("$REPLACE_RESOURCE_TYPES_HERE$", replacement);
                 }
                 String finalProgram = program;
-                Program.compile(
+                SFMProgram.compile(
                         program,
                         successProgram -> templatePrograms.put(
                                 successProgram.name().isBlank() ? entry.getKey().toString() : successProgram.name(),

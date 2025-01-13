@@ -3,7 +3,7 @@ package ca.teamdman.sfml;
 import ca.teamdman.langs.SFMLLexer;
 import ca.teamdman.langs.SFMLParser;
 import ca.teamdman.sfml.ast.ASTBuilder;
-import ca.teamdman.sfml.ast.Program;
+import ca.teamdman.sfml.ast.SFMProgram;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
@@ -25,9 +25,9 @@ public class SFMLTestHelpers {
         var parserErrors = new ArrayList<String>();
         var visitProblems = new ArrayList<Throwable>();
         lexer.removeErrorListeners();
-        lexer.addErrorListener(new Program.ListErrorListener(lexerErrors));
+        lexer.addErrorListener(new SFMProgram.ListErrorListener(lexerErrors));
         parser.removeErrorListeners();
-        parser.addErrorListener(new Program.ListErrorListener(parserErrors));
+        parser.addErrorListener(new SFMProgram.ListErrorListener(parserErrors));
         var context = parser.program();
         if (lexerErrors.isEmpty() && parserErrors.isEmpty()) { // don't build if syntax errors present
             try {
@@ -82,7 +82,7 @@ public class SFMLTestHelpers {
         );
     }
 
-    public static Program compile(String input) {
+    public static SFMProgram compile(String input) {
         var lexer = new SFMLLexer(CharStreams.fromString(input));
         var tokens = new CommonTokenStream(lexer);
         var parser = new SFMLParser(tokens);
