@@ -33,6 +33,14 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class SFMMekanismCompat {
+
+
+    static {
+        if (SFMModCompat.isMekanismLoaded()) {
+            SFMMekanismCompat.registerResourceTypes(SFMResourceTypes.REGISTERER);
+        }
+    }
+
     @SFMLocalizationDatagen
     public static final LocalizationEntry CONTAINER_INSPECTOR_MEKANISM_MACHINE_INPUTS = new LocalizationEntry(
             "gui.sfm.container_inspector.mekanism_machine_inputs",

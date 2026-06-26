@@ -13,6 +13,7 @@ import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.Identifier;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
@@ -104,7 +105,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
             CAP cap,
             int slot,
             long amount,
-            boolean simulate
+            TransactionContext tx
     );
 
     public boolean canExtract(
@@ -131,7 +132,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
             CAP cap,
             int slot,
             STACK stack,
-            boolean simulate
+            TransactionContext tx
     );
 
     public boolean canInsert(

@@ -1,44 +1,28 @@
 package ca.teamdman.sfm.common.capability.energystorage;
 
-import net.neoforged.neoforge.energy.IEnergyStorage;
+import net.neoforged.neoforge.transfer.energy.EnergyHandler;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 
 public record EnergyAcceptorEnergyStorageWrapper(
-        IEnergyStorage inner
-) implements IEnergyStorage {
+        EnergyHandler inner
+) implements EnergyHandler {
     @Override
-    public int receiveEnergy(
-            int maxReceive,
-            boolean simulate
-    ) {
-        return inner.receiveEnergy(maxReceive, simulate);
+    public long getAmountAsLong() {
+        return inner.getAmountAsLong();
     }
 
     @Override
-    public int extractEnergy(
-            int maxExtract,
-            boolean simulate
-    ) {
-        return inner.extractEnergy(maxExtract, simulate);
+    public long getCapacityAsLong() {
+        return inner.getCapacityAsLong();
     }
 
     @Override
-    public int getEnergyStored() {
-        return inner.getEnergyStored();
+    public int insert(int amount, TransactionContext tx) {
+        return inner.insert(amount, tx);
     }
 
     @Override
-    public int getMaxEnergyStored() {
-        // #322: AE always reports zero, we want SFM to be able to insert energy
-        return Integer.MAX_VALUE;
-    }
-
-    @Override
-    public boolean canExtract() {
-        return inner.canExtract();
-    }
-
-    @Override
-    public boolean canReceive() {
-        return inner.canReceive();
+    public int extract(int amount, TransactionContext tx) {
+        return inner.extract(amount, tx);
     }
 }

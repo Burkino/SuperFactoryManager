@@ -16,6 +16,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.neoforged.fml.loading.FMLPaths;
+import net.neoforged.neoforge.transfer.item.ItemResource;
+import net.neoforged.neoforge.transfer.resource.ResourceStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -62,7 +64,7 @@ public class ClientExportHelper {
 
             // Add the tags
             JsonArray tags = new JsonArray();
-            SFMResourceTypes.ITEM.get().getTagsForStack(stack).map(Identifier::toString).forEach(tags::add);
+            SFMResourceTypes.ITEM.get().getTagsForStack(new ResourceStack<>(ItemResource.of(stack), 0)).map(Identifier::toString).forEach(tags::add);
             jsonObject.add("tags", tags);
 
             // Add the tooltip field

@@ -4,6 +4,7 @@ import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import ca.teamdman.sfml.ast.Label;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
 import org.jetbrains.annotations.Nullable;
 
 public class LimitedInputSlot<STACK, ITEM, CAP> implements LimitedSlot<STACK, ITEM, CAP> {
@@ -77,7 +78,12 @@ public class LimitedInputSlot<STACK, ITEM, CAP> implements LimitedSlot<STACK, IT
     public STACK extract(long amount) {
 
         stackInSlotCache = null;
-        return type.extract(handler, slot, amount, false);
+        try (var ctx = Transaction.openRoot()) {
+            STACK extracted = type.extract(handler, slot, amount, ctx);
+            ctx.commit();
+
+            return extracted;
+        }
     }
 
     /// The content of the slot, this may exceed the max stack size.

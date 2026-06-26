@@ -4,6 +4,9 @@ import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import ca.teamdman.sfml.ast.Label;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.neoforged.neoforge.transfer.transaction.SnapshotJournal;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 import org.jetbrains.annotations.Nullable;
 
 public class LimitedOutputSlot<STACK, ITEM, CAP> implements LimitedSlot<STACK, ITEM, CAP> {
@@ -81,11 +84,17 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> implements LimitedSlot<STACK, I
 
     public STACK insert(
             STACK stack,
-            boolean simulate
+            TransactionContext tx
     ) {
+        try (var ctx = Transaction.open(tx)) {
+            stackInSlotCache = null;
+            
+            STACK inserted = type.insert(handler, slot, stack, ctx);
+            ctx.commit();
 
-        if (!simulate) stackInSlotCache = null;
-        return type.insert(handler, slot, stack, simulate);
+            return inserted;
+        }
+
     }
 
     @SuppressWarnings("DuplicatedCode")
@@ -159,5 +168,4 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> implements LimitedSlot<STACK, I
 
         return slot;
     }
-
 }

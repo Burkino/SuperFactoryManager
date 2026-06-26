@@ -3,9 +3,10 @@ package ca.teamdman.sfm.common.resourcetype;
 import ca.teamdman.sfm.common.blockentity.BufferBlockEntityContents;
 import ca.teamdman.sfm.common.capability.SFMWellKnownCapabilities;
 import ca.teamdman.sfm.common.util.SFMResourceLocation;
-import net.neoforged.neoforge.energy.IEnergyStorage;
 import net.neoforged.neoforge.transfer.energy.EnergyHandler;
 import net.neoforged.neoforge.transfer.energy.SimpleEnergyHandler;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 
 public class ForgeEnergyResourceType extends IntegerResourceType<EnergyHandler> {
     public ForgeEnergyResourceType() {
@@ -15,21 +16,30 @@ public class ForgeEnergyResourceType extends IntegerResourceType<EnergyHandler> 
         );
     }
 
+    /**
+     * @return stack that was extracted
+     */
     @Override
     public Integer extract(
-            EnergyHandler _handler,
+            EnergyHandler handler,
             int slot,
             long amount,
-            boolean simulate
+            TransactionContext tx
     ) {
-        IEnergyStorage handler = IEnergyStorage.of(_handler);
         int finalAmount = amount > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) amount;
-        return handler.extractEnergy(finalAmount, simulate);
+        try (var ctx = Transaction.open(tx)) {
+            int extracted = handler.extract(finalAmount, ctx);
+            ctx.commit();
+
+            return extracted;
+        }
     }
 
     @Override
-    public boolean canExtract(EnergyHandler _handler, int slot) {
-        return IEnergyStorage.of(_handler).canExtract();
+    public boolean canExtract(EnergyHandler handler, int slot) {
+        try (var ctx = Transaction.openRoot()) {
+            return handler.extract(Integer.MAX_VALUE, ctx) > 0;
+        }
     }
 
     @Override
@@ -37,20 +47,29 @@ public class ForgeEnergyResourceType extends IntegerResourceType<EnergyHandler> 
         return 1;
     }
 
+    /**
+     * @return remaining stack that was not inserted
+     */
     @Override
     public Integer insert(
-            EnergyHandler _handler,
+            EnergyHandler handler,
             int slot,
             Integer stack,
-            boolean simulate
+            TransactionContext tx
     ) {
-        int accepted = IEnergyStorage.of(_handler).receiveEnergy(stack, simulate);
-        return stack - accepted;
+        try (var ctx = Transaction.open(tx)) {
+            int accepted = handler.insert(stack, ctx);
+            ctx.commit();
+
+            return stack - accepted;
+        }
     }
 
     @Override
-    public boolean canInsert(EnergyHandler _handler, int slot) {
-        return IEnergyStorage.of(_handler).canReceive();
+    public boolean canInsert(EnergyHandler handler, int slot) {
+        try (var ctx = Transaction.openRoot()) {
+            return handler.insert(Integer.MAX_VALUE, ctx) > 0;
+        }
     }
 
     @Override
@@ -60,14 +79,10 @@ public class ForgeEnergyResourceType extends IntegerResourceType<EnergyHandler> 
 
     @Override
     public long getMaxStackSizeForSlot(
-            EnergyHandler _handler,
+            EnergyHandler handler,
             int slot
     ) {
-        int maxStackSize = IEnergyStorage.of(_handler).getMaxEnergyStored();
-        if (maxStackSize == Integer.MAX_VALUE) {
-            return Long.MAX_VALUE;
-        }
-        return maxStackSize;
+        return handler.getCapacityAsLong();
     }
 
     @Override
@@ -87,9 +102,9 @@ public class ForgeEnergyResourceType extends IntegerResourceType<EnergyHandler> 
 
     @Override
     public Integer getStackInSlot(
-            EnergyHandler _handler,
+            EnergyHandler handler,
             int slot
     ) {
-        return IEnergyStorage.of(_handler).getEnergyStored();
+        return handler.getAmountAsInt();
     }
 }
