@@ -7,11 +7,11 @@ import mekanism.api.MekanismAPI;
 import mekanism.api.chemical.BasicChemicalTank;
 import mekanism.api.chemical.Chemical;
 import mekanism.api.chemical.ChemicalResource;
-import mekanism.api.chemical.ChemicalStack;
 import mekanism.common.capabilities.Capabilities;
 import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.item.ItemResource;
 import net.neoforged.neoforge.transfer.resource.ResourceStack;
 import net.neoforged.neoforge.transfer.transaction.Transaction;
 import net.neoforged.neoforge.transfer.transaction.TransactionContext;
@@ -117,7 +117,7 @@ public class ChemicalResourceType extends RegistryBackedResourceType<ResourceSta
 
     @Override
     public boolean matchesStackType(Object o) {
-        return o instanceof ChemicalStack;
+        return o instanceof ResourceStack<?> stack && stack.resource() instanceof ChemicalResource;
     }
 
     @Override

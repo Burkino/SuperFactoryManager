@@ -86,15 +86,8 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> implements LimitedSlot<STACK, I
             STACK stack,
             TransactionContext tx
     ) {
-        try (var ctx = Transaction.open(tx)) {
-            stackInSlotCache = null;
-            
-            STACK inserted = type.insert(handler, slot, stack, ctx);
-            ctx.commit();
-
-            return inserted;
-        }
-
+        stackInSlotCache = null;
+        return type.insert(handler, slot, stack, tx);
     }
 
     @SuppressWarnings("DuplicatedCode")

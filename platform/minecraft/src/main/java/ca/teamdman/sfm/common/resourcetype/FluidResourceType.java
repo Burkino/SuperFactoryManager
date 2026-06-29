@@ -12,6 +12,7 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.transfer.ResourceHandler;
 import net.neoforged.neoforge.transfer.fluid.FluidResource;
 import net.neoforged.neoforge.transfer.fluid.FluidStacksResourceHandler;
+import net.neoforged.neoforge.transfer.item.ItemResource;
 import net.neoforged.neoforge.transfer.resource.ResourceStack;
 import net.neoforged.neoforge.transfer.transaction.Transaction;
 import net.neoforged.neoforge.transfer.transaction.TransactionContext;
@@ -99,7 +100,7 @@ public class FluidResourceType extends RegistryBackedResourceType<ResourceStack<
 
     @Override
     public boolean matchesStackType(Object o) {
-        return o instanceof FluidStack;
+        return o instanceof ResourceStack<?> stack && stack.resource() instanceof FluidResource;
     }
 
     @Override

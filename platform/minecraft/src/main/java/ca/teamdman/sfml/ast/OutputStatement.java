@@ -16,6 +16,8 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 
 import java.util.ArrayDeque;
 import java.util.List;
@@ -165,251 +167,258 @@ public class OutputStatement implements IOStatement {
     public static <STACK, ITEM, CAP> void moveTo(
             ProgramContext context,
             LimitedInputSlot<STACK, ITEM, CAP> source,
-            LimitedOutputSlot<STACK, ITEM, CAP> destination
+            LimitedOutputSlot<STACK, ITEM, CAP> destination,
+            TransactionContext tx
     ) {
+        try (var ctx = Transaction.open(tx)) {
+            context.getLogger().trace(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_BEGIN.get(source, destination)));
 
-        context.getLogger().trace(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_BEGIN.get(source, destination)));
-
-        // Always ensure the resource types match.
-        // e.g., items and fluids are incompatible
-        if (!source.type.equals(destination.type)) {
-            context.getLogger().trace(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_TYPE_MISMATCH.get()));
-            return;
-        }
-        ResourceType<STACK, ITEM, CAP> resourceType = source.type;
-
-        /// Note we intentionally use {@link LimitedInputSlot#peekStackInSlot()} instead of {@link LimitedInputSlot#peekMaxExtractPotential()}
-        /// because this stack is used when computing retention obligations.
-        STACK sourceStack = source.peekStackInSlot();
-
-        // It should never be empty by the time we get here.
-        if (SFMEnvironmentUtils.isInIDE()) {
-            if (resourceType.isEmpty(sourceStack)) {
-                throw new IllegalStateException("Extracted stack was empty! This should never happen.");
+            // Always ensure the resource types match.
+            // e.g., items and fluids are incompatible
+            if (!source.type.equals(destination.type)) {
+                context.getLogger().trace(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_TYPE_MISMATCH.get()));
+                return;
             }
-        }
+            ResourceType<STACK, ITEM, CAP> resourceType = source.type;
 
-        // ensure the output slot allows this item
-        if (!destination.tracker.matchesStack(sourceStack)) {
-            context
-                    .getLogger()
-                    .trace(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_DESTINATION_TRACKER_REJECT.get()));
-            return;
-        }
+            /// Note we intentionally use {@link LimitedInputSlot#peekStackInSlot()} instead of {@link LimitedInputSlot#peekMaxExtractPotential()}
+            /// because this stack is used when computing retention obligations.
+            STACK sourceStack = source.peekStackInSlot();
 
-        // begin counting how much we can move
-        long amountAvailableToMove = resourceType.getAmount(sourceStack);
+            // It should never be empty by the time we get here.
+            if (SFMEnvironmentUtils.isInIDE()) {
+                if (resourceType.isEmpty(sourceStack)) {
+                    throw new IllegalStateException("Extracted stack was empty! This should never happen.");
+                }
+            }
 
-        // how many have we promised to RETAIN in this slot
-        long promised_to_leave_in_this_slot = source.tracker.getRetentionObligationForSlot(
-                resourceType,
-                sourceStack,
-                source.pos,
-                source.slot
-        );
-        amountAvailableToMove -= promised_to_leave_in_this_slot;
+            // ensure the output slot allows this item
+            if (!destination.tracker.matchesStack(sourceStack)) {
+                context
+                        .getLogger()
+                        .trace(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_DESTINATION_TRACKER_REJECT.get()));
+                return;
+            }
 
-        // how much remains until our RETAIN is satisfied
-        long remainingObligation = source.tracker.getRemainingRetentionObligation(resourceType, sourceStack);
+            // begin counting how much we can move
+            long amountAvailableToMove = resourceType.getAmount(sourceStack);
 
-        // how much can we allocate towards satisfying the obligation
-        long dedicatingToObligation = Math.min(remainingObligation, amountAvailableToMove);
-        amountAvailableToMove -= dedicatingToObligation;
-
-        // update the obligation tracker
-        if (dedicatingToObligation > 0) {
-            source.tracker.trackRetentionObligation(
+            // how many have we promised to RETAIN in this slot
+            long promised_to_leave_in_this_slot = source.tracker.getRetentionObligationForSlot(
                     resourceType,
                     sourceStack,
-                    source.slot,
                     source.pos,
-                    dedicatingToObligation
+                    source.slot
             );
-            context
-                    .getLogger()
-                    .trace(x -> {
-                        long newRemainingObligation = remainingObligation - dedicatingToObligation;
-                        x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_RETENTION_OBLIGATION.get(
-                                promised_to_leave_in_this_slot,
-                                newRemainingObligation
-                        ));
-                    });
-        }
+            amountAvailableToMove -= promised_to_leave_in_this_slot;
 
-        // if we can't move anything after our retention obligations, we're done
-        if (amountAvailableToMove <= 0) {
-            context
-                    .getLogger()
-                    .trace(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_RETENTION_OBLIGATION_NO_MOVE.get()));
-            source.setDone();
-            return;
-        }
+            // how much remains until our RETAIN is satisfied
+            long remainingObligation = source.tracker.getRemainingRetentionObligation(resourceType, sourceStack);
 
-        // how many can we move before accounting for limits
-        STACK potentialRemainder = destination.insert(sourceStack, true);
-        long amountThatFitsInDestination = resourceType.getAmountDifference(sourceStack, potentialRemainder);
-        if (amountThatFitsInDestination < 0) {
-            throw new IllegalStateException(
-                    "Potential insertion remainder amount exceeded the insertion amount! This should never happen. "
-                    + "Tried inserting "
-                    + sourceStack
-                    + " into "
-                    + destination
-                    + " but got "
-                    + potentialRemainder
-                    + " remainder"
-                    + " (diff="
-                    + amountThatFitsInDestination
-                    + ")."
-            );
-        } else if (amountThatFitsInDestination == 0) {
+            // how much can we allocate towards satisfying the obligation
+            long dedicatingToObligation = Math.min(remainingObligation, amountAvailableToMove);
+            amountAvailableToMove -= dedicatingToObligation;
+
+            // update the obligation tracker
+            if (dedicatingToObligation > 0) {
+                source.tracker.trackRetentionObligation(
+                        resourceType,
+                        sourceStack,
+                        source.slot,
+                        source.pos,
+                        dedicatingToObligation
+                );
+                context
+                        .getLogger()
+                        .trace(x -> {
+                            long newRemainingObligation = remainingObligation - dedicatingToObligation;
+                            x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_RETENTION_OBLIGATION.get(
+                                    promised_to_leave_in_this_slot,
+                                    newRemainingObligation
+                            ));
+                        });
+            }
+
+            // if we can't move anything after our retention obligations, we're done
+            if (amountAvailableToMove <= 0) {
+                context
+                        .getLogger()
+                        .trace(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_RETENTION_OBLIGATION_NO_MOVE.get()));
+                source.setDone();
+                return;
+            }
+
+            // how many can we move before accounting for limits
+            STACK potentialRemainder;
+            try (var ctx2 = Transaction.open(ctx)) {
+                potentialRemainder = destination.insert(sourceStack, ctx2);
+            }
+            long amountThatFitsInDestination = resourceType.getAmountDifference(sourceStack, potentialRemainder);
+            if (amountThatFitsInDestination < 0) {
+                throw new IllegalStateException(
+                        "Potential insertion remainder amount exceeded the insertion amount! This should never happen. "
+                                + "Tried inserting "
+                                + sourceStack
+                                + " into "
+                                + destination
+                                + " but got "
+                                + potentialRemainder
+                                + " remainder"
+                                + " (diff="
+                                + amountThatFitsInDestination
+                                + ")."
+                );
+            } else if (amountThatFitsInDestination == 0) {
+                context
+                        .getLogger()
+                        .trace(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_ZERO_SIMULATED_MOVEMENT.get(
+                                potentialRemainder,
+                                sourceStack
+                        )));
+                return;
+            }
+
+            // we can only move as much as the destination can fit
+            amountAvailableToMove = Math.min(amountThatFitsInDestination, amountAvailableToMove);
+
+            // apply output constraints
+            long destinationAmountLimit = destination.tracker.getMaxTransferable(resourceType, sourceStack);
+            amountAvailableToMove = Math.min(amountAvailableToMove, destinationAmountLimit);
+
+            // apply input constraints
+            long sourceAmountLimit = source.tracker.getMaxTransferable(resourceType, sourceStack);
+            amountAvailableToMove = Math.min(amountAvailableToMove, sourceAmountLimit);
+
+            // apply stack size constraints
+            // This is uninfluenced by the capability; it doesn't matter if we compute using the source stack or the destination stack.
+            long maxStackSize = resourceType.getMaxStackSize(sourceStack);
+            amountAvailableToMove = Math.min(amountAvailableToMove, maxStackSize);
+            {
+                long logToMove = amountAvailableToMove;
+                context
+                        .getLogger()
+                        .trace(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_STACK_LIMIT_NEW_TO_MOVE.get(
+                                destinationAmountLimit,
+                                sourceAmountLimit,
+                                maxStackSize,
+                                logToMove
+                        )));
+            }
+
+            // check if we can move anything at all
+            if (amountAvailableToMove <= 0) {
+                context.getLogger().trace(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_ZERO_TO_MOVE.get()));
+                return;
+            }
+
+            // extract item for real
+            STACK extracted = source.extract(amountAvailableToMove, ctx);
             context
                     .getLogger()
-                    .trace(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_ZERO_SIMULATED_MOVEMENT.get(
-                            potentialRemainder,
-                            sourceStack
+                    .debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_EXTRACTED.get(extracted, source)));
+
+            if (resourceType.isEmpty(extracted)) {
+                // this slot is insert-only; it reports a stack in the slot but refuses extraction
+                context.getLogger().trace(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_EXTRACTED_NOTHING.get()));
+                source.setDone();
+                return;
+            }
+
+            // insert item for real
+            STACK extractedRemainder = destination.insert(extracted, ctx);
+
+            // track transfer amounts
+            var moved = resourceType.getAmountDifference(extracted, extractedRemainder);
+            source.tracker.trackTransfer(resourceType, extracted, moved);
+            destination.tracker.trackTransfer(resourceType, extracted, moved);
+
+            // log
+            context
+                    .getLogger()
+                    .info(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_END.get(
+                            moved,
+                            resourceType.getRegistryKeyForStack(extracted),
+                            source,
+                            destination
                     )));
-            return;
-        }
 
-        // we can only move as much as the destination can fit
-        amountAvailableToMove = Math.min(amountThatFitsInDestination, amountAvailableToMove);
-
-        // apply output constraints
-        long destinationAmountLimit = destination.tracker.getMaxTransferable(resourceType, sourceStack);
-        amountAvailableToMove = Math.min(amountAvailableToMove, destinationAmountLimit);
-
-        // apply input constraints
-        long sourceAmountLimit = source.tracker.getMaxTransferable(resourceType, sourceStack);
-        amountAvailableToMove = Math.min(amountAvailableToMove, sourceAmountLimit);
-
-        // apply stack size constraints
-        // This is uninfluenced by the capability; it doesn't matter if we compute using the source stack or the destination stack.
-        long maxStackSize = resourceType.getMaxStackSize(sourceStack);
-        amountAvailableToMove = Math.min(amountAvailableToMove, maxStackSize);
-        {
-            long logToMove = amountAvailableToMove;
-            context
-                    .getLogger()
-                    .trace(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_STACK_LIMIT_NEW_TO_MOVE.get(
-                            destinationAmountLimit,
-                            sourceAmountLimit,
-                            maxStackSize,
-                            logToMove
-                    )));
-        }
-
-        // check if we can move anything at all
-        if (amountAvailableToMove <= 0) {
-            context.getLogger().trace(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_ZERO_TO_MOVE.get()));
-            return;
-        }
-
-        // extract item for real
-        STACK extracted = source.extract(amountAvailableToMove);
-        context
-                .getLogger()
-                .debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_EXTRACTED.get(extracted, source)));
-
-        if (resourceType.isEmpty(extracted)) {
-            // this slot is insert-only; it reports a stack in the slot but refuses extraction
-            context.getLogger().trace(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_EXTRACTED_NOTHING.get()));
-            source.setDone();
-            return;
-        }
-
-        // insert item for real
-        STACK extractedRemainder = destination.insert(extracted, false);
-
-        // track transfer amounts
-        var moved = resourceType.getAmountDifference(extracted, extractedRemainder);
-        source.tracker.trackTransfer(resourceType, extracted, moved);
-        destination.tracker.trackTransfer(resourceType, extracted, moved);
-
-        // log
-        context
-                .getLogger()
-                .info(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_END.get(
-                        moved,
-                        resourceType.getRegistryKeyForStack(extracted),
-                        source,
-                        destination
-                )));
-
-        // If the remainder is not empty, someone lied.
-        // THIS SHOULD NEVER HAPPEN
-        // will void items if it does
-        if (!resourceType.isEmpty(extractedRemainder)) {
-            Identifier resourceTypeName = SFMResourceTypes.registry().getId(resourceType);
-            String stackName = resourceType.getItem(sourceStack).toString();
-            Level level = context.getManager().getLevel();
-            assert level != null;
-            StringBuilder report = new StringBuilder();
-            report.append("!!!RESOURCE LOSS HAS OCCURRED!!!");
-            String currentLine = Thread.currentThread().getStackTrace()[1].toString();
-            report.append("    ").append(currentLine).append("\n");
-            report.append("=== Summary ===\n");
-            int width = -32;
-            report
-                    .append(String.format("%" + width + "s", "Simulated extraction"))
-                    .append(": ")
-                    .append(sourceStack)
-                    .append("\n");
-            report
-                    .append(String.format("%" + width + "s", "Simulated insertion remainder"))
-                    .append(": ")
-                    .append(potentialRemainder)
-                    .append(" (moved=")
-                    .append(resourceType.getAmountDifference(sourceStack, potentialRemainder))
-                    .append(")")
-                    .append(" <-- the output block lied here\n");
-            report
-                    .append(String.format("%" + width + "s", "Actual extraction"))
-                    .append(": ")
-                    .append(extracted)
-                    .append("\n");
-            report
-                    .append(String.format("%" + width + "s", "Actual insertion"))
-                    .append(": ")
-                    .append(moved)
-                    .append(" ")
-                    .append(stackName)
-                    .append("\n");
-            report.append(String.format("%" + width + "s", "Actual insertion remainder")).append(": ")
-                    .append(extractedRemainder)
-                    .append(" (")
-                    .append(resourceTypeName)
-                    .append(":")
-                    .append(stackName)
-                    .append(") <-- this is what was lost\n");
-
-            report.append("=== Manager ===\n");
-            report
-                    .append("Level: ")
-                    .append(level.dimension().identifier())
-                    .append(" (")
-                    .append(level)
-                    .append(")\n");
-            report.append("Position: ").append(context.getManager().getBlockPos()).append("\n");
-
-            report.append("=== Input Slot ===\n");
-            addSlotDetailsToReport(report, source, level);
-
-            report.append("=== Output Slot ===\n");
-            addSlotDetailsToReport(report, destination, level);
-
-            context.getLogger().error(x -> x.accept(LOG_PROGRAM_VOIDED_RESOURCES.get(report.toString())));
-            if (SFMConfig.SERVER_CONFIG.logResourceLossToConsole.get()) {
-                report.append("\nThis can be silenced in the SFM config.\n");
-                report.append(
-                        "Operators can use `/sfm config edit` to open a GUI to change the SFM config while the game is running.\n");
-                report.append(
-                        "This can be caused by output inventory logic encountering an integer overflow when moving large quantities of items.\n");
+            // If the remainder is not empty, someone lied.
+            // THIS SHOULD NEVER HAPPEN
+            // will void items if it does
+            if (!resourceType.isEmpty(extractedRemainder)) {
+                Identifier resourceTypeName = SFMResourceTypes.registry().getId(resourceType);
+                String stackName = resourceType.getItem(sourceStack).toString();
+                Level level = context.getManager().getLevel();
+                assert level != null;
+                StringBuilder report = new StringBuilder();
+                report.append("!!!RESOURCE LOSS HAS OCCURRED!!!");
+                String currentLine = Thread.currentThread().getStackTrace()[1].toString();
+                report.append("    ").append(currentLine).append("\n");
+                report.append("=== Summary ===\n");
+                int width = -32;
                 report
-                        .append("The SFM issue tracker can be found at ")
-                        .append(SFM.ISSUE_TRACKER_URL)
-                        .append(" because this shouldn't be happening lol");
-                SFM.LOGGER.error(report.toString());
+                        .append(String.format("%" + width + "s", "Simulated extraction"))
+                        .append(": ")
+                        .append(sourceStack)
+                        .append("\n");
+                report
+                        .append(String.format("%" + width + "s", "Simulated insertion remainder"))
+                        .append(": ")
+                        .append(potentialRemainder)
+                        .append(" (moved=")
+                        .append(resourceType.getAmountDifference(sourceStack, potentialRemainder))
+                        .append(")")
+                        .append(" <-- the output block lied here\n");
+                report
+                        .append(String.format("%" + width + "s", "Actual extraction"))
+                        .append(": ")
+                        .append(extracted)
+                        .append("\n");
+                report
+                        .append(String.format("%" + width + "s", "Actual insertion"))
+                        .append(": ")
+                        .append(moved)
+                        .append(" ")
+                        .append(stackName)
+                        .append("\n");
+                report.append(String.format("%" + width + "s", "Actual insertion remainder")).append(": ")
+                        .append(extractedRemainder)
+                        .append(" (")
+                        .append(resourceTypeName)
+                        .append(":")
+                        .append(stackName)
+                        .append(") <-- this is what was lost\n");
+
+                report.append("=== Manager ===\n");
+                report
+                        .append("Level: ")
+                        .append(level.dimension().identifier())
+                        .append(" (")
+                        .append(level)
+                        .append(")\n");
+                report.append("Position: ").append(context.getManager().getBlockPos()).append("\n");
+
+                report.append("=== Input Slot ===\n");
+                addSlotDetailsToReport(report, source, level);
+
+                report.append("=== Output Slot ===\n");
+                addSlotDetailsToReport(report, destination, level);
+
+                context.getLogger().error(x -> x.accept(LOG_PROGRAM_VOIDED_RESOURCES.get(report.toString())));
+                if (SFMConfig.SERVER_CONFIG.logResourceLossToConsole.get()) {
+                    report.append("\nThis can be silenced in the SFM config.\n");
+                    report.append(
+                            "Operators can use `/sfm config edit` to open a GUI to change the SFM config while the game is running.\n");
+                    report.append(
+                            "This can be caused by output inventory logic encountering an integer overflow when moving large quantities of items.\n");
+                    report
+                            .append("The SFM issue tracker can be found at ")
+                            .append(SFM.ISSUE_TRACKER_URL)
+                            .append(" because this shouldn't be happening lol");
+                    SFM.LOGGER.error(report.toString());
+                }
+            } else {
+                ctx.commit();
             }
         }
     }
@@ -432,112 +441,115 @@ public class OutputStatement implements IOStatement {
             return;
         }
 
+        try (var ctx = Transaction.openRoot()) {
 
         /* ################
              INPUT SLOTS
            ################ */
 
-        // gather the input slots from all the input statements, +27 to hopefully avoid resizing
-        //noinspection rawtypes
-        ArrayDeque<LimitedInputSlot> inputSlots = new ArrayDeque<>(lastInputCapacity + 27);
-        for (var inputStatement : context.getInputs()) {
-            inputStatement.gatherSlots(context, inputSlots::add);
-        }
+            // gather the input slots from all the input statements, +27 to hopefully avoid resizing
+            //noinspection rawtypes
+            ArrayDeque<LimitedInputSlot> inputSlots = new ArrayDeque<>(lastInputCapacity + 27);
+            for (var inputStatement : context.getInputs()) {
+                inputStatement.gatherSlots(context, inputSlots::add);
+            }
 
-        // Update allocation hint
-        lastInputCapacity = inputSlots.size();
+            // Update allocation hint
+            lastInputCapacity = inputSlots.size();
 
-        // Log the number of input slots
-        context
-                .getLogger()
-                .info(x -> x.accept(LOG_PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_INPUT_SLOT_COUNT.get(inputSlots.size())));
-
-        // Short-circuit if we have nothing to move
-        if (inputSlots.isEmpty()) {
-            // Log the short-circuit
+            // Log the number of input slots
             context
                     .getLogger()
-                    .debug(x -> x.accept(LOG_PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_INPUT_SLOTS.get()));
+                    .info(x -> x.accept(LOG_PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_INPUT_SLOT_COUNT.get(inputSlots.size())));
 
-            // Stop processing
-            return;
-        }
+            // Short-circuit if we have nothing to move
+            if (inputSlots.isEmpty()) {
+                // Log the short-circuit
+                context
+                        .getLogger()
+                        .debug(x -> x.accept(LOG_PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_INPUT_SLOTS.get()));
+
+                // Stop processing
+                return;
+            }
 
         /* ################
              OUTPUT SLOTS
            ################ */
 
-        // collect the output slots, +27 to hopefully avoid resizing
-        //noinspection rawtypes
-        ArrayDeque<LimitedOutputSlot> outputSlots = new ArrayDeque<>(lastOutputCapacity + 27);
-        gatherSlots(context, outputSlots::add);
+            // collect the output slots, +27 to hopefully avoid resizing
+            //noinspection rawtypes
+            ArrayDeque<LimitedOutputSlot> outputSlots = new ArrayDeque<>(lastOutputCapacity + 27);
+            gatherSlots(context, outputSlots::add);
 
-        // Update allocation hint
-        lastOutputCapacity = outputSlots.size();
+            // Update allocation hint
+            lastOutputCapacity = outputSlots.size();
 
-        // Log the number of output slots
-        context
-                .getLogger()
-                .info(x -> x.accept(LOG_PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_OUTPUT_SLOT_COUNT.get(outputSlots.size())));
-
-        // Short-circuit if we have nothing to move
-        if (outputSlots.isEmpty()) {
-            // Log the short-circuit
+            // Log the number of output slots
             context
                     .getLogger()
-                    .debug(x -> x.accept(LOG_PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_OUTPUT_SLOTS.get()));
+                    .info(x -> x.accept(LOG_PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_OUTPUT_SLOT_COUNT.get(outputSlots.size())));
 
-            // Free the output slots (we acquired no slots but the assertion is still valid)
-            LimitedOutputSlotObjectPool.release(outputSlots);
+            // Short-circuit if we have nothing to move
+            if (outputSlots.isEmpty()) {
+                // Log the short-circuit
+                context
+                        .getLogger()
+                        .debug(x -> x.accept(LOG_PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_OUTPUT_SLOTS.get()));
 
-            // Stop processing
-            return;
-        }
+                // Free the output slots (we acquired no slots but the assertion is still valid)
+                LimitedOutputSlotObjectPool.release(outputSlots);
+
+                // Stop processing
+                return;
+            }
 
 
         /* ################
                  MOVE
            ################ */
 
-        // try and move resources from input slots to output slots
-        for (var inputSlot : inputSlots) {
-            // Get an input slot
-            if (inputSlot.isDone()) {
-                continue;
-            }
-
-            // Try to move into every output slot
-            var outputSlotIter = outputSlots.iterator();
-            while (outputSlotIter.hasNext()) {
-                // Get an output slot
-                var outputSlot = outputSlotIter.next();
-                if (outputSlot.isDone()) {
-                    // Make sure we don't process this slot again
-                    outputSlotIter.remove(); // IMPORTANT!!!!! DONT FREE SLOTS TWICE WHEN FREEING REMAINDER BELOW
-                    // Release it
-                    LimitedOutputSlotObjectPool.release(outputSlot);
-                    // Try again
+            // try and move resources from input slots to output slots
+            for (var inputSlot : inputSlots) {
+                // Get an input slot
+                if (inputSlot.isDone()) {
                     continue;
                 }
 
-                // Attempt a move
-                //noinspection unchecked
-                moveTo(context, inputSlot, outputSlot);
+                // Try to move into every output slot
+                var outputSlotIter = outputSlots.iterator();
+                while (outputSlotIter.hasNext()) {
+                    // Get an output slot
+                    var outputSlot = outputSlotIter.next();
+                    if (outputSlot.isDone()) {
+                        // Make sure we don't process this slot again
+                        outputSlotIter.remove(); // IMPORTANT!!!!! DONT FREE SLOTS TWICE WHEN FREEING REMAINDER BELOW
+                        // Release it
+                        LimitedOutputSlotObjectPool.release(outputSlot);
+                        // Try again
+                        continue;
+                    }
 
-                // Continue to the next input slot when the current one is finished
-                if (inputSlot.isDone()) break;
+                    // Attempt a move
+                    //noinspection unchecked
+                    moveTo(context, inputSlot, outputSlot, ctx);
+
+                    // Continue to the next input slot when the current one is finished
+                    if (inputSlot.isDone()) break;
+                }
+                // Stop processing when no output slots are left
+                if (outputSlots.isEmpty()) break;
             }
-            // Stop processing when no output slots are left
-            if (outputSlots.isEmpty()) break;
-        }
 
 
         /* ################
                 FINISH
            ################ */
 
-        // Release remaining slot objects
-        LimitedOutputSlotObjectPool.release(outputSlots);
+            // Release remaining slot objects
+            LimitedOutputSlotObjectPool.release(outputSlots);
+            ctx.commit();
+        }
     }
 
     /**

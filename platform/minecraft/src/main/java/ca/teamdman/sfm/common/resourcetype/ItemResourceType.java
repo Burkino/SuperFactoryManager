@@ -95,7 +95,7 @@ public class ItemResourceType extends RegistryBackedResourceType<ResourceStack<I
 
     @Override
     public boolean matchesStackType(Object o) {
-        return o instanceof ItemStack;
+        return o instanceof ResourceStack<?> stack && stack.resource() instanceof ItemResource;
     }
 
     @Override

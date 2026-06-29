@@ -11,8 +11,9 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
+import net.neoforged.neoforge.transfer.item.ItemResource;
 import org.apache.commons.compress.utils.FileNameUtils;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +32,7 @@ public class SFMLTests {
 
     @Test
     public void resourceIdentifierClassLoadingRegression() {
-        new ResourceIdentifier<ItemStack, Item, IItemHandler>("stone");
+        new ResourceIdentifier<ItemStack, Item, ResourceHandler<ItemResource>>("stone");
     }
 
     @Test
@@ -69,7 +70,7 @@ public class SFMLTests {
         assertNoCompileErrors(input);
         var program = compile(input);
         assertEquals(
-                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>("item", "minecraft", "stick")),
+                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, ResourceHandler<FluidResource>>("item", "minecraft", "stick")),
                 program.referencedResources()
         );
     }
@@ -86,7 +87,7 @@ public class SFMLTests {
         assertNoCompileErrors(input);
         var program = compile(input);
         assertEquals(
-                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>("item", ".*", "stick")),
+                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, ResourceHandler<FluidResource>>("item", ".*", "stick")),
                 program.referencedResources()
         );
     }
@@ -103,7 +104,7 @@ public class SFMLTests {
         assertNoCompileErrors(input);
         var program = compile(input);
         assertEquals(
-                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>("item", ".*", "stick")),
+                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, ResourceHandler<FluidResource>>("item", ".*", "stick")),
                 program.referencedResources()
         );
     }
@@ -120,7 +121,7 @@ public class SFMLTests {
         assertNoCompileErrors(input);
         var program = compile(input);
         assertEquals(
-                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>("item", ".*", "stick")),
+                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, ResourceHandler<FluidResource>>("item", ".*", "stick")),
                 program.referencedResources()
         );
     }
@@ -137,7 +138,7 @@ public class SFMLTests {
         assertNoCompileErrors(input);
         var program = compile(input);
         assertEquals(
-                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>("fluid", ".*", "water")),
+                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, ResourceHandler<FluidResource>>("fluid", ".*", "water")),
                 program.referencedResources()
         );
     }
@@ -154,7 +155,7 @@ public class SFMLTests {
         assertNoCompileErrors(input);
         var program = compile(input);
         assertEquals(
-                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>(
+                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, ResourceHandler<FluidResource>>(
                         "fluid",
                         "minecraft",
                         "water"
@@ -175,7 +176,7 @@ public class SFMLTests {
         assertNoCompileErrors(input);
         var program = compile(input);
         assertEquals(
-                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>("fluid", ".*", ".*")),
+                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, ResourceHandler<FluidResource>>("fluid", ".*", ".*")),
                 program.referencedResources()
         );
     }
@@ -195,7 +196,7 @@ public class SFMLTests {
 
     @Test
     public void badTimerIntervalCheckingConfig() {
-        var min = SFMConfig.SERVER_CONFIG.timerTriggerMinimumIntervalInTicks.getDefault();
+        int min = SFMConfig.SERVER_CONFIG.timerTriggerMinimumIntervalInTicks.getDefault();
         var template = """
                     name "hello world"
                 
@@ -303,7 +304,7 @@ public class SFMLTests {
         assertNoCompileErrors(input);
         var program = compile(input);
         assertEquals(
-                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>(
+                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, ResourceHandler<FluidResource>>(
                         "forge_energy",
                         "forge",
                         "energy"
@@ -324,7 +325,7 @@ public class SFMLTests {
         assertNoCompileErrors(input);
         var program = compile(input);
         assertEquals(
-                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>(
+                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, ResourceHandler<FluidResource>>(
                         "forge_energy",
                         "forge",
                         "energy"
@@ -345,7 +346,7 @@ public class SFMLTests {
         assertNoCompileErrors(input);
         var program = compile(input);
         assertEquals(
-                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>("gas", ".*", "ethylene")),
+                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, ResourceHandler<FluidResource>>("gas", ".*", "ethylene")),
                 program.referencedResources()
         );
     }
